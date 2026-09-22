@@ -77,10 +77,14 @@
     flex:1;
     display:none;
     flex-direction:column;
-    padding:10px max(16px, calc(var(--u) * 25)) calc(20vh + 90px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(13vh + 72px);
     gap:26px;
   }
   .screen.active{ display:flex; }
+  .screen[data-screen="enquiry"]{
+    padding-bottom:max(16px, calc(var(--u) * 25));
+    gap:16px;
+  }
 
   h1,h2{
     font-family:"Zin Display Condensed", "Lora", serif;
@@ -118,7 +122,7 @@
   /* photo polaroid stack */
   .polaroid-stack{
     position:relative;
-    height:max(210px, calc(var(--u) * 300));
+    height:min(max(210px, calc(var(--u) * 300)), 24vh);
     margin:14px 0 2px;
   }
   .polaroid{
@@ -150,7 +154,7 @@
 
   /* blob photo frame */
   .blob-wrap{
-    width:max(140px, calc(var(--u) * 206)); height:max(140px, calc(var(--u) * 206));
+    width:min(max(140px, calc(var(--u) * 206)), 24vh); height:min(max(140px, calc(var(--u) * 206)), 24vh);
     margin:6px auto 2px;
     display:flex; align-items:center; justify-content:center;
   }
@@ -183,7 +187,7 @@
     position:absolute;
     left:max(16px, calc(var(--u) * 25));
     right:max(16px, calc(var(--u) * 25));
-    bottom:20%;
+    bottom:13%;
     width:auto;
   }
   .btn.teal{ background:#008E75; color:#fff; border-color:var(--ink); }
@@ -213,16 +217,16 @@
     background:#fff;
     border:2px solid var(--ink);
     border-radius:22px;
-    padding:20px;
+    padding:16px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:10px;
   }
   .form-card input{
     width:100%;
     font-family:inherit;
     font-size:15px;
-    padding:15px 16px;
+    padding:13px 16px;
     border:none;
     border-radius:12px;
     background:#e7e4de;
@@ -233,7 +237,7 @@
   /* qr box */
   .qr-box{
     width:100%;
-    max-width:250px;
+    max-width:min(250px, 24vh);
     aspect-ratio:1/1;
     margin:8px auto;
     border:2px dashed var(--ink);
@@ -254,7 +258,7 @@
   .flent-logo{
     position:absolute;
     left:0; right:0;
-    bottom:7%;
+    bottom:5%;
     display:flex;
     justify-content:center;
     padding:0;
