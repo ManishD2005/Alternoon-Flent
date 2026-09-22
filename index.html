@@ -78,8 +78,8 @@
     flex:1;
     display:none;
     flex-direction:column;
-    padding:10px max(16px, calc(var(--u) * 25)) calc(10vh + 60px);
-    padding:10px max(16px, calc(var(--u) * 25)) calc(10dvh + 60px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(8vh + 50px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(8dvh + 50px);
     gap:26px;
   }
   .screen.active{ display:flex; }
@@ -191,7 +191,7 @@
     position:absolute;
     left:max(16px, calc(var(--u) * 25));
     right:max(16px, calc(var(--u) * 25));
-    bottom:10%;
+    bottom:8%;
     width:auto;
   }
   .btn.teal{ background:#008E75; color:#fff; border-color:var(--ink); }
@@ -349,9 +349,9 @@
     text-align:center;
     font-size:13px;
     color:var(--muted);
-    margin-top:-4px;
-    min-height:16px;
+    min-height:0;
   }
+  .scan-status:empty{ display:none; }
   .teal-bg .scan-status{ color:rgba(255,255,255,0.75); }
 
   .toast{
@@ -626,6 +626,12 @@
         }
       }
       requestAnimationFrame(fitQrBoxes);
+      // Real mobile browsers (Android Chrome especially) often settle their
+      // address bar / nav-bar height a beat *after* the page first paints —
+      // re-check a few times shortly after navigating so the box catches up.
+      setTimeout(fitQrBoxes, 150);
+      setTimeout(fitQrBoxes, 400);
+      setTimeout(fitQrBoxes, 900);
     }
     window.scrollTo(0,0);
   }
@@ -647,6 +653,12 @@
   }
   window.addEventListener('resize', fitQrBoxes);
   window.addEventListener('orientationchange', () => requestAnimationFrame(fitQrBoxes));
+  // visualViewport reports the *actual* visible area on mobile and fires
+  // when the browser's address bar shows/hides — window's own 'resize'
+  // event doesn't always catch that on Android Chrome.
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', fitQrBoxes);
+  }
 
   // Deep-link support: a physical QR code encodes a URL like
   // https://yourdomain.vercel.app/#r1 — scanning it with the phone's
