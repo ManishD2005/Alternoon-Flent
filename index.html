@@ -83,6 +83,41 @@
     gap:26px;
   }
   .screen.active{ display:flex; }
+
+  /* entrance animation — each screen's content eases in as it becomes active */
+  @keyframes screenEnter{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @keyframes popIn{
+    from{ opacity:0; transform:scale(0.85); }
+    to{ opacity:1; transform:scale(1); }
+  }
+  .screen.active > *{
+    animation:screenEnter .5s cubic-bezier(.19,1,.22,1) both;
+  }
+  .screen.active > .spacer{ animation:none; }
+  .screen.active > *:nth-child(1){ animation-delay:0s; }
+  .screen.active > *:nth-child(2){ animation-delay:.06s; }
+  .screen.active > *:nth-child(3){ animation-delay:.12s; }
+  .screen.active > *:nth-child(4){ animation-delay:.18s; }
+  .screen.active > *:nth-child(5){ animation-delay:.24s; }
+  .screen.active > *:nth-child(6){ animation-delay:.30s; }
+  .screen.active > *:nth-child(7){ animation-delay:.36s; }
+  .screen.active > *:nth-child(8){ animation-delay:.42s; }
+
+  /* photo/badge elements get a little pop instead of a straight slide-up */
+  .screen.active .blob-wrap{
+    animation-name:popIn;
+    animation-timing-function:cubic-bezier(.34,1.56,.64,1);
+  }
+  .screen.active .paw-wrap{
+    animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .06s both;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .screen.active > *{ animation:none; }
+  }
   .screen[data-screen="enquiry"]{
     padding-bottom:max(16px, calc(var(--u) * 25));
     gap:16px;
@@ -101,13 +136,18 @@
   h1.center{ text-align:center; }
   h2.room-title{ font-size:max(26px, calc(var(--u) * 42)); line-height:1.08; }
   h2.center{ font-size:max(30px, calc(var(--u) * 51)); text-align:center; }
+  .bye-message{
+    font-size:max(24px, calc(var(--u) * 36));
+    line-height:1.25;
+    padding:0 12px;
+  }
 
   p{ font-size:max(15px, calc(var(--u) * 19.5)); line-height:1.3; margin:0; color:var(--ink-soft); }
   .teal-bg p{ color:rgba(255,255,255,0.92); }
   p.muted{ color:var(--muted); font-size:max(15px, calc(var(--u) * 19.5)); }
   p.center{ text-align:center; }
 
-  .spacer{ flex:1; }
+  .spacer{ flex:1; pointer-events:none; }
 
   /* paw badge */
   .paw-wrap{ position:relative; width:max(56px, calc(var(--u) * 83)); height:max(58px, calc(var(--u) * 85)); flex-shrink:0; }
@@ -182,7 +222,7 @@
     transition:transform .08s ease-out, box-shadow .08s ease-out, filter .08s ease-out;
     text-align:center;
   }
-  .btn:active{
+  .btn:active, .btn.pressed{
     transform:translate(-3px,3px) scale(0.97);
     box-shadow:-2px 2px 0 var(--shadow-ink), inset 2px 3px 6px rgba(0,0,0,0.3), inset -2px -2px 5px rgba(255,255,255,0.15);
     filter:brightness(0.94);
@@ -195,6 +235,7 @@
     width:auto;
   }
   #introBtn{ bottom:16%; }
+  #closedBtn{ bottom:16%; }
   .btn.teal{ background:#008E75; color:#fff; border-color:var(--ink); }
   .btn.white{ background:#fff; color:var(--ink); }
   .btn.peach{ background:var(--peach-2); color:var(--ink); font-size:max(13px, calc(var(--u) * 15)); }
@@ -207,6 +248,7 @@
 
   .link-under{
     text-align:center;
+    font-family:inherit;
     font-size:max(15px, calc(var(--u) * 19.5));
     font-weight:600;
     text-decoration:underline;
@@ -215,6 +257,11 @@
     border:none;
     cursor:pointer;
     padding:6px;
+    transition:opacity .12s ease, transform .12s ease;
+  }
+  .link-under:active, .link-under.pressed{
+    opacity:0.55;
+    transform:scale(0.96);
   }
 
   /* form card */
@@ -261,14 +308,32 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:11px;
     color:var(--ink-soft);
-    text-transform:uppercase;
-    letter-spacing:.05em;
     text-align:center;
     padding:10px;
     box-sizing:border-box;
     overflow:hidden;
+  }
+  .qr-label{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .qr-icon{
+    width:30%;
+    max-width:72px;
+    aspect-ratio:1/1;
+    color:var(--ink-soft);
+    opacity:0.55;
+  }
+  .qr-label-text{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.02em;
+    color:var(--ink-soft);
+    opacity:0.75;
   }
 
   /* logo */
@@ -389,7 +454,7 @@
       <img id="sherlockIntro" alt="Sherlock the detective cat">
     </div>
     <p class="center">Help Sherlock solve this case &amp; find out what makes this house a Home :)</p>
-    <button class="btn teal btn-primary" id="introBtn" onclick="go('scan1')">Begin the case!</button>
+    <button class="btn teal btn-primary" id="introBtn" onclick="pressThenGo(this,'scan1')">Begin the case!</button>
     <div class="spacer" style="flex:1.2"></div>
     <div class="flent-logo">
       <svg width="75" height="28" viewBox="0 0 75 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -420,7 +485,30 @@
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r1">
         <div class="qr-reader" id="reader-r1"></div>
-        <span class="qr-label" id="qrlabel-r1">QR PLACEHOLDER</span>
+        <span class="qr-label" id="qrlabel-r1">
+          <svg class="qr-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="66" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="76" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="8" y="66" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="76" width="6" height="6" fill="currentColor"/>
+          <rect x="46" y="10" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="24" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="34" width="8" height="8" fill="currentColor"/>
+          <rect x="10" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="26" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="78" width="8" height="8" fill="currentColor"/>
+        </svg>
+          <span class="qr-label-text">The mark will scan here</span>
+        </span>
       </div>
     </div>
     <p class="scan-status" id="scanStatus-r1"></p>
@@ -449,7 +537,7 @@
     </div>
     <p class="muted center" id="polaroidCaption-r1">Click to view photo</p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('scan2')">See the next clue</button>
+    <button class="btn teal btn-primary" onclick="pressThenGo(this,'scan2')">See the next clue</button>
   </div>
 
   <!-- SCAN 2 -->
@@ -471,7 +559,30 @@
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r2">
         <div class="qr-reader" id="reader-r2"></div>
-        <span class="qr-label" id="qrlabel-r2">QR PLACEHOLDER</span>
+        <span class="qr-label" id="qrlabel-r2">
+          <svg class="qr-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="66" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="76" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="8" y="66" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="76" width="6" height="6" fill="currentColor"/>
+          <rect x="46" y="10" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="24" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="34" width="8" height="8" fill="currentColor"/>
+          <rect x="10" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="26" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="78" width="8" height="8" fill="currentColor"/>
+        </svg>
+          <span class="qr-label-text">The mark will scan here</span>
+        </span>
       </div>
     </div>
     <p class="scan-status" id="scanStatus-r2"></p>
@@ -500,7 +611,7 @@
     </div>
     <p class="muted center" id="polaroidCaption-r2">Click to view photo</p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('scan3')">See the next clue</button>
+    <button class="btn teal btn-primary" onclick="pressThenGo(this,'scan3')">See the next clue</button>
   </div>
 
   <!-- SCAN 3 -->
@@ -522,7 +633,30 @@
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r3">
         <div class="qr-reader" id="reader-r3"></div>
-        <span class="qr-label" id="qrlabel-r3">QR PLACEHOLDER</span>
+        <span class="qr-label" id="qrlabel-r3">
+          <svg class="qr-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="66" y="8" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="76" y="18" width="6" height="6" fill="currentColor"/>
+          <rect x="8" y="66" width="26" height="26" rx="3" stroke="currentColor" stroke-width="7"/>
+          <rect x="18" y="76" width="6" height="6" fill="currentColor"/>
+          <rect x="46" y="10" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="24" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="34" width="8" height="8" fill="currentColor"/>
+          <rect x="10" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="26" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="46" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="62" width="8" height="8" fill="currentColor"/>
+          <rect x="78" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="62" y="78" width="8" height="8" fill="currentColor"/>
+          <rect x="46" y="78" width="8" height="8" fill="currentColor"/>
+        </svg>
+          <span class="qr-label-text">The mark will scan here</span>
+        </span>
       </div>
     </div>
     <p class="scan-status" id="scanStatus-r3"></p>
@@ -551,7 +685,7 @@
     </div>
     <p class="muted center" id="polaroidCaption-r3">Click to view photo</p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('closed')">Case closed</button>
+    <button class="btn teal btn-primary" onclick="pressThenGo(this,'closed')">Case closed</button>
   </div>
 
   <!-- CASE CLOSED -->
@@ -562,7 +696,7 @@
       <img id="sherlockClosed" alt="Sherlock the detective cat celebrating">
     </div>
     <p class="center">You've found what makes this place a home :)</p>
-    <button class="btn white btn-primary" onclick="go('enquiry')">See what's next!</button>
+    <button class="btn white btn-primary" id="closedBtn" onclick="pressThenGo(this,'enquiry')">See what's next!</button>
     <div class="spacer" style="flex:1.2"></div>
     <div class="flent-logo">
       <svg width="75" height="28" viewBox="0 0 75 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -587,7 +721,14 @@
       <button class="btn peach" onclick="submitEnquiry()">Enquire</button>
     </div>
     <div class="spacer"></div>
-    <button class="link-under" onclick="showToast('No worries — thanks for stopping by!')">Nah I'm good :)</button>
+    <button class="link-under" onclick="pressThenGo(this,'bye')">Nah I'm good :)</button>
+  </div>
+
+  <!-- GOODBYE -->
+  <div class="screen" data-screen="bye" data-bg="teal">
+    <div class="spacer"></div>
+    <h2 class="center bye-message">Thank you for spending your evening with us :)</h2>
+    <div class="spacer"></div>
   </div>
 
 </div>
@@ -602,7 +743,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const dotSteps = ["0","scan1","r1","scan2","r2","scan3","r3","closed","enquiry"];
+  const dotSteps = ["0","scan1","r1","scan2","r2","scan3","r3","closed","enquiry","bye"];
   const root = document.getElementById('phoneRoot');
   let html5QrCode = null;
   let activeScanKey = null;
@@ -611,6 +752,18 @@
   // See README-setup.md for how to create this in ~5 minutes.
   const SHEETS_ENDPOINT = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
+  // Lets the pressed/tap animation actually finish playing before the
+  // screen switches, instead of navigating away mid-press.
+  function pressThenGo(el, screenKey){
+    el.classList.add('pressed');
+    el.disabled = true;
+    setTimeout(() => {
+      go(screenKey);
+      el.classList.remove('pressed');
+      el.disabled = false;
+    }, 190);
+  }
+
   function go(screenKey, skipHash){
     if(activeScanKey){ cancelScanner(); } // don't leave the camera running in the background
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -618,6 +771,9 @@
     if(target){
       target.classList.add('active');
       root.classList.toggle('teal-bg', target.dataset.bg === 'teal');
+      // clear any leftover "animation:none" from a previous visit so the
+      // entrance animation is free to replay each time this screen is shown
+      target.querySelectorAll('*').forEach(el => { if(el.style.animation) el.style.animation = ''; });
       if(!skipHash){
         try{
           history.replaceState(null, '', '#'+screenKey);
@@ -653,6 +809,14 @@
     });
   }
   window.addEventListener('resize', fitQrBoxes);
+
+  // Once an element's entrance animation finishes, drop it entirely so the
+  // held end-state transform can never fight with :active/press effects.
+  root.addEventListener('animationend', (e) => {
+    if(e.animationName === 'screenEnter' || e.animationName === 'popIn'){
+      e.target.style.animation = 'none';
+    }
+  });
   window.addEventListener('orientationchange', () => requestAnimationFrame(fitQrBoxes));
   // visualViewport reports the *actual* visible area on mobile and fires
   // when the browser's address bar shows/hides — window's own 'resize'
