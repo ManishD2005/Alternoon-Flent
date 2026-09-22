@@ -241,8 +241,8 @@
   /* qr box */
   .qr-box{
     width:100%;
-    max-width:min(250px, 24vh);
-    max-width:min(250px, 24dvh);
+    max-width:min(360px, max(80px, calc(87vh - 440px)));
+    max-width:min(360px, max(80px, calc(87dvh - 440px)));
     aspect-ratio:1/1;
     margin:8px auto;
     border:2px dashed var(--ink);
@@ -607,7 +607,12 @@
       target.classList.add('active');
       root.classList.toggle('teal-bg', target.dataset.bg === 'teal');
       if(!skipHash){
-        history.replaceState(null, '', '#'+screenKey);
+        try{
+          history.replaceState(null, '', '#'+screenKey);
+        }catch(e){
+          // Some embedded/sandboxed contexts (e.g. preview iframes) block
+          // history updates entirely — navigation still works fine without it.
+        }
       }
     }
     window.scrollTo(0,0);
