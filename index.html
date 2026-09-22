@@ -194,6 +194,7 @@
     bottom:8%;
     width:auto;
   }
+  #introBtn{ bottom:16%; }
   .btn.teal{ background:#008E75; color:#fff; border-color:var(--ink); }
   .btn.white{ background:#fff; color:var(--ink); }
   .btn.peach{ background:var(--peach-2); color:var(--ink); font-size:max(13px, calc(var(--u) * 15)); }
@@ -388,7 +389,7 @@
       <img id="sherlockIntro" alt="Sherlock the detective cat">
     </div>
     <p class="center">Help Sherlock solve this case &amp; find out what makes this house a Home :)</p>
-    <button class="btn teal btn-primary" onclick="go('scan1')">Begin the case!</button>
+    <button class="btn teal btn-primary" id="introBtn" onclick="go('scan1')">Begin the case!</button>
     <div class="spacer" style="flex:1.2"></div>
     <div class="flent-logo">
       <svg width="75" height="28" viewBox="0 0 75 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -415,7 +416,7 @@
         <div class="paw-num">1</div>
       </div>
     </div>
-    <p class="narrow">It's present somewhere near the balcony. Scan it to reveal the story.</p>
+    <p>It's present somewhere near the balcony. Scan it to reveal the story.</p>
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r1">
         <div class="qr-reader" id="reader-r1"></div>
@@ -466,7 +467,7 @@
         <div class="paw-num">2</div>
       </div>
     </div>
-    <p class="narrow">Try the kitchen counter. Scan it to reveal the story.</p>
+    <p>Try the kitchen counter. Scan it to reveal the story.</p>
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r2">
         <div class="qr-reader" id="reader-r2"></div>
@@ -517,7 +518,7 @@
         <div class="paw-num">3</div>
       </div>
     </div>
-    <p class="narrow">Check near the bedroom window. Scan it to reveal the story.</p>
+    <p>Check near the bedroom window. Scan it to reveal the story.</p>
     <div class="qr-flex-area">
       <div class="qr-box" id="qrbox-r3">
         <div class="qr-reader" id="reader-r3"></div>
