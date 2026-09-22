@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Afternoon - Help Sherlock</title>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
@@ -293,6 +294,75 @@
     opacity:.8;
   }
 
+  /* QR scanner overlay */
+  .scan-overlay{
+    position:fixed;
+    inset:0;
+    background:#0b0b0b;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    z-index:70;
+    padding:calc(16px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));
+  }
+  .scan-overlay.show{ display:flex; }
+  .scan-topbar{
+    width:100%;
+    max-width:400px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .scan-title{ color:#fff; font-weight:700; font-size:16px; }
+  .scan-close{
+    background:rgba(255,255,255,0.12);
+    border:none;
+    color:#fff;
+    width:34px; height:34px;
+    border-radius:50%;
+    font-size:20px;
+    line-height:1;
+    cursor:pointer;
+  }
+  .scan-frame{
+    position:relative;
+    width:100%;
+    max-width:340px;
+    aspect-ratio:1/1;
+    border-radius:20px;
+    overflow:hidden;
+    background:#000;
+  }
+  .scan-frame #qrReaderRegion{
+    width:100% !important;
+    height:100% !important;
+  }
+  .scan-frame #qrReaderRegion video{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover;
+  }
+  .scan-frame #qrReaderRegion img{ display:none; } /* hide default torch/camera-switch icons image if any */
+  .scan-corner{
+    position:absolute;
+    width:34px; height:34px;
+    border:3px solid var(--teal, #008E75);
+    pointer-events:none;
+  }
+  .scan-corner.tl{ top:10px; left:10px; border-right:none; border-bottom:none; border-radius:8px 0 0 0; }
+  .scan-corner.tr{ top:10px; right:10px; border-left:none; border-bottom:none; border-radius:0 8px 0 0; }
+  .scan-corner.bl{ bottom:10px; left:10px; border-right:none; border-top:none; border-radius:0 0 0 8px; }
+  .scan-corner.br{ bottom:10px; right:10px; border-left:none; border-top:none; border-radius:0 0 8px 0; }
+  .scan-status{
+    color:rgba(255,255,255,0.85);
+    font-size:14px;
+    text-align:center;
+    margin-top:20px;
+    min-height:20px;
+  }
+  .scan-fallback{ color:#fff; margin-top:6px; }
+
   .toast{
     position:fixed;
     bottom:24px;
@@ -358,7 +428,7 @@
     <div class="spacer"></div>
     <div class="qr-box">QR placeholder</div>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('r1')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" onclick="openScanner('r1')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 1 -->
@@ -405,7 +475,7 @@
     <div class="spacer"></div>
     <div class="qr-box">QR placeholder</div>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('r2')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" onclick="openScanner('r2')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 2 -->
@@ -452,7 +522,7 @@
     <div class="spacer"></div>
     <div class="qr-box">QR placeholder</div>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="go('r3')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" onclick="openScanner('r3')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 3 -->
@@ -525,6 +595,22 @@
   </div>
 </div>
 
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-topbar">
+    <span class="scan-title">Scan the mark</span>
+    <button class="scan-close" onclick="closeScanner()" aria-label="Close scanner">&times;</button>
+  </div>
+  <div class="scan-frame">
+    <div id="qrReaderRegion"></div>
+    <div class="scan-corner tl"></div>
+    <div class="scan-corner tr"></div>
+    <div class="scan-corner bl"></div>
+    <div class="scan-corner br"></div>
+  </div>
+  <p class="scan-status" id="scanStatus">Point your camera at the paw mark</p>
+  <button class="link-under scan-fallback" id="scanFallback" style="display:none;" onclick="scannerFallback()">Can't scan it? Continue anyway</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -562,6 +648,78 @@
 
   function openZoom(){ document.getElementById('zoomOverlay').classList.add('show'); }
   function closeZoom(){ document.getElementById('zoomOverlay').classList.remove('show'); }
+
+  // ---- In-page QR camera scanner ----
+  let html5QrCode = null;
+  let scannerFallbackKey = null;
+
+  function extractScreenKey(decodedText){
+    try{
+      const url = new URL(decodedText);
+      const key = url.hash.replace('#','');
+      if(dotSteps.includes(key)) return key;
+    }catch(e){ /* not a full URL, fall through */ }
+    const trimmed = decodedText.replace('#','').trim();
+    if(dotSteps.includes(trimmed)) return trimmed;
+    return null;
+  }
+
+  function openScanner(fallbackKey){
+    scannerFallbackKey = fallbackKey;
+    const overlay = document.getElementById('scanOverlay');
+    const status = document.getElementById('scanStatus');
+    const fallbackBtn = document.getElementById('scanFallback');
+    status.textContent = 'Point your camera at the paw mark';
+    fallbackBtn.style.display = 'none';
+    overlay.classList.add('show');
+
+    if(typeof Html5Qrcode === 'undefined'){
+      status.textContent = "Scanner couldn't load — check your connection.";
+      fallbackBtn.style.display = 'inline-block';
+      return;
+    }
+
+    html5QrCode = new Html5Qrcode('qrReaderRegion');
+    const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      config,
+      (decodedText) => {
+        const key = extractScreenKey(decodedText);
+        if(key){
+          status.textContent = 'Got it!';
+          stopScanner();
+          closeScanner();
+          go(key);
+        } else {
+          status.textContent = "That's not one of this hunt's marks — try another.";
+        }
+      },
+      () => { /* per-frame "no QR found" noise — ignore */ }
+    ).catch((err) => {
+      status.textContent = "Couldn't access the camera — check permissions.";
+      fallbackBtn.style.display = 'inline-block';
+    });
+  }
+
+  function stopScanner(){
+    if(html5QrCode){
+      html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
+      html5QrCode = null;
+    }
+  }
+
+  function closeScanner(){
+    stopScanner();
+    document.getElementById('scanOverlay').classList.remove('show');
+  }
+
+  function scannerFallback(){
+    const key = scannerFallbackKey;
+    closeScanner();
+    if(key) go(key);
+  }
 
   function showToast(msg){
     const t = document.getElementById('toast');
