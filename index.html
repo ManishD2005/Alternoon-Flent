@@ -78,8 +78,8 @@
     flex:1;
     display:none;
     flex-direction:column;
-    padding:10px max(16px, calc(var(--u) * 25)) calc(13vh + 72px);
-    padding:10px max(16px, calc(var(--u) * 25)) calc(13dvh + 72px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(10vh + 60px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(10dvh + 60px);
     gap:26px;
   }
   .screen.active{ display:flex; }
@@ -191,7 +191,7 @@
     position:absolute;
     left:max(16px, calc(var(--u) * 25));
     right:max(16px, calc(var(--u) * 25));
-    bottom:13%;
+    bottom:10%;
     width:auto;
   }
   .btn.teal{ background:#008E75; color:#fff; border-color:var(--ink); }
@@ -239,12 +239,21 @@
   .form-card input::placeholder{ color:#6b6255; }
 
   /* qr box */
-  .qr-box{
+  .qr-flex-area{
+    flex:1;
+    min-height:0;
+    min-width:0;
     width:100%;
-    max-width:min(360px, max(80px, calc(87vh - 440px)));
-    max-width:min(360px, max(80px, calc(87dvh - 440px)));
-    aspect-ratio:1/1;
-    margin:8px auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .qr-box{
+    width:1px;
+    height:1px;
+    flex:0 0 auto;
+    margin:0;
     border:2px dashed var(--ink);
     border-radius:18px;
     background:rgba(255,255,255,0.5);
@@ -257,6 +266,8 @@
     letter-spacing:.05em;
     text-align:center;
     padding:10px;
+    box-sizing:border-box;
+    overflow:hidden;
   }
 
   /* logo */
@@ -405,13 +416,13 @@
       </div>
     </div>
     <p class="narrow">It's present somewhere near the balcony. Scan it to reveal the story.</p>
-    <div class="spacer"></div>
-    <div class="qr-box" id="qrbox-r1">
-      <div class="qr-reader" id="reader-r1"></div>
-      <span class="qr-label" id="qrlabel-r1">QR PLACEHOLDER</span>
+    <div class="qr-flex-area">
+      <div class="qr-box" id="qrbox-r1">
+        <div class="qr-reader" id="reader-r1"></div>
+        <span class="qr-label" id="qrlabel-r1">QR PLACEHOLDER</span>
+      </div>
     </div>
     <p class="scan-status" id="scanStatus-r1"></p>
-    <div class="spacer"></div>
     <button class="btn teal btn-primary" id="scanBtn-r1" onclick="openScanner('r1')">Tap to Scan!</button>
   </div>
 
@@ -456,13 +467,13 @@
       </div>
     </div>
     <p class="narrow">Try the kitchen counter. Scan it to reveal the story.</p>
-    <div class="spacer"></div>
-    <div class="qr-box" id="qrbox-r2">
-      <div class="qr-reader" id="reader-r2"></div>
-      <span class="qr-label" id="qrlabel-r2">QR PLACEHOLDER</span>
+    <div class="qr-flex-area">
+      <div class="qr-box" id="qrbox-r2">
+        <div class="qr-reader" id="reader-r2"></div>
+        <span class="qr-label" id="qrlabel-r2">QR PLACEHOLDER</span>
+      </div>
     </div>
     <p class="scan-status" id="scanStatus-r2"></p>
-    <div class="spacer"></div>
     <button class="btn teal btn-primary" id="scanBtn-r2" onclick="openScanner('r2')">Tap to Scan!</button>
   </div>
 
@@ -507,13 +518,13 @@
       </div>
     </div>
     <p class="narrow">Check near the bedroom window. Scan it to reveal the story.</p>
-    <div class="spacer"></div>
-    <div class="qr-box" id="qrbox-r3">
-      <div class="qr-reader" id="reader-r3"></div>
-      <span class="qr-label" id="qrlabel-r3">QR PLACEHOLDER</span>
+    <div class="qr-flex-area">
+      <div class="qr-box" id="qrbox-r3">
+        <div class="qr-reader" id="reader-r3"></div>
+        <span class="qr-label" id="qrlabel-r3">QR PLACEHOLDER</span>
+      </div>
     </div>
     <p class="scan-status" id="scanStatus-r3"></p>
-    <div class="spacer"></div>
     <button class="btn teal btn-primary" id="scanBtn-r3" onclick="openScanner('r3')">Tap to Scan!</button>
   </div>
 
@@ -614,9 +625,28 @@
           // history updates entirely — navigation still works fine without it.
         }
       }
+      requestAnimationFrame(fitQrBoxes);
     }
     window.scrollTo(0,0);
   }
+
+  // Size each QR box to the largest square that actually fits in the space
+  // left on screen — measured directly rather than guessed, so it's correct
+  // on every device regardless of browser chrome/address-bar height.
+  function fitQrBoxes(){
+    document.querySelectorAll('.qr-flex-area').forEach(area => {
+      const box = area.querySelector('.qr-box');
+      if(!box) return;
+      const w = area.clientWidth;
+      const h = area.clientHeight;
+      if(w < 2 || h < 2) return; // area not visible/laid out yet
+      const side = Math.max(90, Math.min(w, h, 400) - 2);
+      box.style.width = side + 'px';
+      box.style.height = side + 'px';
+    });
+  }
+  window.addEventListener('resize', fitQrBoxes);
+  window.addEventListener('orientationchange', () => requestAnimationFrame(fitQrBoxes));
 
   // Deep-link support: a physical QR code encodes a URL like
   // https://yourdomain.vercel.app/#r1 — scanning it with the phone's
