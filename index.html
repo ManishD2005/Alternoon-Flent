@@ -45,6 +45,7 @@
     max-width:600px;
     margin:0 auto;
     min-height:100vh;
+    min-height:100dvh;
     display:flex;
     flex-direction:column;
     position:relative;
@@ -78,6 +79,7 @@
     display:none;
     flex-direction:column;
     padding:10px max(16px, calc(var(--u) * 25)) calc(13vh + 72px);
+    padding:10px max(16px, calc(var(--u) * 25)) calc(13dvh + 72px);
     gap:26px;
   }
   .screen.active{ display:flex; }
@@ -119,19 +121,28 @@
   .row-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
   p.narrow{ max-width:60%; }
 
-  /* photo polaroid stack */
+  /* photo polaroid stack — front card + a peek of the next, swipeable */
   .polaroid-stack{
     position:relative;
-    height:min(max(210px, calc(var(--u) * 300)), 24vh);
     margin:14px 0 2px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
   }
+  .polaroid-stack::-webkit-scrollbar{ display:none; }
   .polaroid{
-    position:absolute;
-    top:0; left:0;
-    width:82%;
+    flex:0 0 min(90%, calc(24vh - 16px));
+    flex:0 0 min(90%, calc(24dvh - 16px));
+    scroll-snap-align:start;
     background:#fff;
     border-radius:6px;
-    padding:10px 10px 28px;
+    padding:10px 10px 26px;
     box-shadow:0 10px 18px rgba(0,0,0,0.18);
   }
   .polaroid .inner{
@@ -140,21 +151,14 @@
     background:#171310;
     border-radius:2px;
   }
-  .polaroid.back{
-    left:auto; right:-6%;
-    transform:rotate(7deg);
-    z-index:1;
-    opacity:0.9;
-  }
-  .polaroid.front{
-    transform:rotate(-3deg);
-    z-index:2;
-  }
+  .polaroid.front{ transform:rotate(-3deg); }
+  .polaroid.back{ transform:rotate(2deg); }
   .polaroid.clickable{ cursor:pointer; }
 
   /* blob photo frame */
   .blob-wrap{
     width:min(max(140px, calc(var(--u) * 206)), 24vh); height:min(max(140px, calc(var(--u) * 206)), 24vh);
+    width:min(max(140px, calc(var(--u) * 206)), 24dvh); height:min(max(140px, calc(var(--u) * 206)), 24dvh);
     margin:6px auto 2px;
     display:flex; align-items:center; justify-content:center;
   }
@@ -238,6 +242,7 @@
   .qr-box{
     width:100%;
     max-width:min(250px, 24vh);
+    max-width:min(250px, 24dvh);
     aspect-ratio:1/1;
     margin:8px auto;
     border:2px dashed var(--ink);
@@ -263,27 +268,39 @@
     justify-content:center;
     padding:0;
   }
+  .flent-logo svg{
+    width:52px;
+    height:auto;
+  }
 
   /* modal zoom */
   .zoom-overlay{
     position:fixed;
     inset:0;
-    background:rgba(20,15,10,0.55);
-    display:none;
+    background:rgba(8,6,5,0.75);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    display:flex;
     align-items:center;
     justify-content:center;
-    padding:30px;
+    padding:28px;
     z-index:50;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .2s ease;
   }
-  .zoom-overlay.show{ display:flex; }
+  .zoom-overlay.show{ opacity:1; visibility:visible; }
   .zoom-card{
     background:#fff;
-    border-radius:10px;
-    padding:14px 14px 30px;
+    border-radius:14px;
+    padding:16px 16px 34px;
     width:100%;
-    max-width:340px;
-    box-shadow:0 20px 40px rgba(0,0,0,0.35);
+    max-width:420px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.45);
+    transform:scale(0.94);
+    transition:transform .2s ease;
   }
+  .zoom-overlay.show .zoom-card{ transform:scale(1); }
   .zoom-card .inner{
     width:100%;
     aspect-ratio:1/1;
@@ -298,74 +315,33 @@
     opacity:.8;
   }
 
-  /* QR scanner overlay */
-  .scan-overlay{
-    position:fixed;
-    inset:0;
-    background:#0b0b0b;
+  /* inline QR camera reader (lives inside the qr-box itself) */
+  .qr-box{ position:relative; overflow:hidden; }
+  .qr-reader{
     display:none;
-    flex-direction:column;
-    align-items:center;
-    z-index:70;
-    padding:calc(16px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));
-  }
-  .scan-overlay.show{ display:flex; }
-  .scan-topbar{
-    width:100%;
-    max-width:400px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:18px;
-  }
-  .scan-title{ color:#fff; font-weight:700; font-size:16px; }
-  .scan-close{
-    background:rgba(255,255,255,0.12);
-    border:none;
-    color:#fff;
-    width:34px; height:34px;
-    border-radius:50%;
-    font-size:20px;
-    line-height:1;
-    cursor:pointer;
-  }
-  .scan-frame{
-    position:relative;
-    width:100%;
-    max-width:340px;
-    aspect-ratio:1/1;
-    border-radius:20px;
+    position:absolute;
+    inset:0;
+    border-radius:16px;
     overflow:hidden;
     background:#000;
   }
-  .scan-frame #qrReaderRegion{
-    width:100% !important;
-    height:100% !important;
-  }
-  .scan-frame #qrReaderRegion video{
+  .qr-reader.active{ display:block; }
+  .qr-reader video{
     width:100% !important;
     height:100% !important;
     object-fit:cover;
   }
-  .scan-frame #qrReaderRegion img{ display:none; } /* hide default torch/camera-switch icons image if any */
-  .scan-corner{
-    position:absolute;
-    width:34px; height:34px;
-    border:3px solid var(--teal, #008E75);
-    pointer-events:none;
-  }
-  .scan-corner.tl{ top:10px; left:10px; border-right:none; border-bottom:none; border-radius:8px 0 0 0; }
-  .scan-corner.tr{ top:10px; right:10px; border-left:none; border-bottom:none; border-radius:0 8px 0 0; }
-  .scan-corner.bl{ bottom:10px; left:10px; border-right:none; border-top:none; border-radius:0 0 0 8px; }
-  .scan-corner.br{ bottom:10px; right:10px; border-left:none; border-top:none; border-radius:0 0 8px 0; }
+  .qr-reader img{ display:none; } /* hide html5-qrcode's default torch/camera-switch icon images */
+  .qr-box.scanning{ border-style:solid; border-color:var(--teal, #008E75); background:#000; }
+  .qr-label.hidden{ display:none; }
   .scan-status{
-    color:rgba(255,255,255,0.85);
-    font-size:14px;
     text-align:center;
-    margin-top:20px;
-    min-height:20px;
+    font-size:13px;
+    color:var(--muted);
+    margin-top:-4px;
+    min-height:16px;
   }
-  .scan-fallback{ color:#fff; margin-top:6px; }
+  .teal-bg .scan-status{ color:rgba(255,255,255,0.75); }
 
   .toast{
     position:fixed;
@@ -430,9 +406,13 @@
     </div>
     <p class="narrow">It's present somewhere near the balcony. Scan it to reveal the story.</p>
     <div class="spacer"></div>
-    <div class="qr-box">QR placeholder</div>
+    <div class="qr-box" id="qrbox-r1">
+      <div class="qr-reader" id="reader-r1"></div>
+      <span class="qr-label" id="qrlabel-r1">QR PLACEHOLDER</span>
+    </div>
+    <p class="scan-status" id="scanStatus-r1"></p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="openScanner('r1')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" id="scanBtn-r1" onclick="openScanner('r1')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 1 -->
@@ -452,10 +432,10 @@
     </div>
     <p>Case notes: unusually good light around 6pm. Subject: possibly just good architecture.</p>
     <div class="polaroid-stack">
-      <div class="polaroid back"><div class="inner"></div></div>
-      <div class="polaroid front clickable" onclick="openZoom()"><div class="inner"></div></div>
+      <div class="polaroid front clickable" onclick="openZoom('r1')"><div class="inner"></div></div>
+      <div class="polaroid back clickable" onclick="openZoom('r1')"><div class="inner"></div></div>
     </div>
-    <p class="muted center">Click to zoom</p>
+    <p class="muted center" id="polaroidCaption-r1">Click to view photo</p>
     <div class="spacer"></div>
     <button class="btn teal btn-primary" onclick="go('scan2')">See the next clue</button>
   </div>
@@ -477,9 +457,13 @@
     </div>
     <p class="narrow">Try the kitchen counter. Scan it to reveal the story.</p>
     <div class="spacer"></div>
-    <div class="qr-box">QR placeholder</div>
+    <div class="qr-box" id="qrbox-r2">
+      <div class="qr-reader" id="reader-r2"></div>
+      <span class="qr-label" id="qrlabel-r2">QR PLACEHOLDER</span>
+    </div>
+    <p class="scan-status" id="scanStatus-r2"></p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="openScanner('r2')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" id="scanBtn-r2" onclick="openScanner('r2')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 2 -->
@@ -499,10 +483,10 @@
     </div>
     <p>Case notes: counter space enough to chop, plate, and still fit a glass of wine. A rare and underrated crime scene.</p>
     <div class="polaroid-stack">
-      <div class="polaroid back"><div class="inner"></div></div>
-      <div class="polaroid front clickable" onclick="openZoom()"><div class="inner"></div></div>
+      <div class="polaroid front clickable" onclick="openZoom('r2')"><div class="inner"></div></div>
+      <div class="polaroid back clickable" onclick="openZoom('r2')"><div class="inner"></div></div>
     </div>
-    <p class="muted center">Click to zoom</p>
+    <p class="muted center" id="polaroidCaption-r2">Click to view photo</p>
     <div class="spacer"></div>
     <button class="btn teal btn-primary" onclick="go('scan3')">See the next clue</button>
   </div>
@@ -524,9 +508,13 @@
     </div>
     <p class="narrow">Check near the bedroom window. Scan it to reveal the story.</p>
     <div class="spacer"></div>
-    <div class="qr-box">QR placeholder</div>
+    <div class="qr-box" id="qrbox-r3">
+      <div class="qr-reader" id="reader-r3"></div>
+      <span class="qr-label" id="qrlabel-r3">QR PLACEHOLDER</span>
+    </div>
+    <p class="scan-status" id="scanStatus-r3"></p>
     <div class="spacer"></div>
-    <button class="btn teal btn-primary" onclick="openScanner('r3')">Tap to Scan!</button>
+    <button class="btn teal btn-primary" id="scanBtn-r3" onclick="openScanner('r3')">Tap to Scan!</button>
   </div>
 
   <!-- ROOM 3 -->
@@ -546,10 +534,10 @@
     </div>
     <p>Case notes: the kind of room that makes "five more minutes" a permanent condition. No further questions.</p>
     <div class="polaroid-stack">
-      <div class="polaroid back"><div class="inner"></div></div>
-      <div class="polaroid front clickable" onclick="openZoom()"><div class="inner"></div></div>
+      <div class="polaroid front clickable" onclick="openZoom('r3')"><div class="inner"></div></div>
+      <div class="polaroid back clickable" onclick="openZoom('r3')"><div class="inner"></div></div>
     </div>
-    <p class="muted center">Click to zoom</p>
+    <p class="muted center" id="polaroidCaption-r3">Click to view photo</p>
     <div class="spacer"></div>
     <button class="btn teal btn-primary" onclick="go('closed')">Case closed</button>
   </div>
@@ -599,33 +587,20 @@
   </div>
 </div>
 
-<div class="scan-overlay" id="scanOverlay">
-  <div class="scan-topbar">
-    <span class="scan-title">Scan the mark</span>
-    <button class="scan-close" onclick="closeScanner()" aria-label="Close scanner">&times;</button>
-  </div>
-  <div class="scan-frame">
-    <div id="qrReaderRegion"></div>
-    <div class="scan-corner tl"></div>
-    <div class="scan-corner tr"></div>
-    <div class="scan-corner bl"></div>
-    <div class="scan-corner br"></div>
-  </div>
-  <p class="scan-status" id="scanStatus">Point your camera at the paw mark</p>
-  <button class="link-under scan-fallback" id="scanFallback" style="display:none;" onclick="scannerFallback()">Can't scan it? Continue anyway</button>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
   const dotSteps = ["0","scan1","r1","scan2","r2","scan3","r3","closed","enquiry"];
   const root = document.getElementById('phoneRoot');
+  let html5QrCode = null;
+  let activeScanKey = null;
 
   // ---- CONFIG: paste your Google Apps Script Web App URL here ----
   // See README-setup.md for how to create this in ~5 minutes.
   const SHEETS_ENDPOINT = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
   function go(screenKey, skipHash){
+    if(activeScanKey){ cancelScanner(); } // don't leave the camera running in the background
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     const target = document.querySelector('.screen[data-screen="'+screenKey+'"]');
     if(target){
@@ -650,13 +625,20 @@
   window.addEventListener('hashchange', routeFromHash);
   routeFromHash(); // handle the case where the page was opened via a QR link
 
-  function openZoom(){ document.getElementById('zoomOverlay').classList.add('show'); }
-  function closeZoom(){ document.getElementById('zoomOverlay').classList.remove('show'); }
+  let zoomRoomKey = null;
+  function openZoom(roomKey){
+    zoomRoomKey = roomKey || null;
+    document.getElementById('zoomOverlay').classList.add('show');
+  }
+  function closeZoom(){
+    document.getElementById('zoomOverlay').classList.remove('show');
+    if(zoomRoomKey){
+      const caption = document.getElementById('polaroidCaption-'+zoomRoomKey);
+      if(caption) caption.textContent = 'Scroll to see more';
+    }
+  }
 
-  // ---- In-page QR camera scanner ----
-  let html5QrCode = null;
-  let scannerFallbackKey = null;
-
+  // ---- In-page QR camera scanner (lives inside the qr-box on each scan screen) ----
   function extractScreenKey(decodedText){
     try{
       const url = new URL(decodedText);
@@ -668,61 +650,78 @@
     return null;
   }
 
-  function openScanner(fallbackKey){
-    scannerFallbackKey = fallbackKey;
-    const overlay = document.getElementById('scanOverlay');
-    const status = document.getElementById('scanStatus');
-    const fallbackBtn = document.getElementById('scanFallback');
-    status.textContent = 'Point your camera at the paw mark';
-    fallbackBtn.style.display = 'none';
-    overlay.classList.add('show');
+  function revertScanUI(key){
+    const label = document.getElementById('qrlabel-'+key);
+    const readerEl = document.getElementById('reader-'+key);
+    const qrbox = document.getElementById('qrbox-'+key);
+    const btn = document.getElementById('scanBtn-'+key);
+    const status = document.getElementById('scanStatus-'+key);
+    if(label) label.classList.remove('hidden');
+    if(readerEl) readerEl.classList.remove('active');
+    if(qrbox) qrbox.classList.remove('scanning');
+    if(btn) btn.textContent = 'Tap to Scan!';
+    if(activeScanKey === key) activeScanKey = null;
+  }
+
+  function cancelScanner(){
+    const key = activeScanKey;
+    if(html5QrCode){
+      const instance = html5QrCode;
+      html5QrCode = null;
+      instance.stop().then(() => instance.clear()).catch(() => {});
+    }
+    if(key) revertScanUI(key);
+  }
+
+  function openScanner(key){
+    // Tapping the button again while scanning cancels it.
+    if(activeScanKey === key){
+      cancelScanner();
+      return;
+    }
+    if(activeScanKey){ cancelScanner(); }
+
+    activeScanKey = key;
+    const qrbox = document.getElementById('qrbox-'+key);
+    const label = document.getElementById('qrlabel-'+key);
+    const status = document.getElementById('scanStatus-'+key);
+    const btn = document.getElementById('scanBtn-'+key);
+    const readerId = 'reader-'+key;
+    const readerEl = document.getElementById(readerId);
+
+    status.textContent = '';
+    label.classList.add('hidden');
+    readerEl.classList.add('active');
+    qrbox.classList.add('scanning');
+    btn.textContent = 'Cancel';
 
     if(typeof Html5Qrcode === 'undefined'){
       status.textContent = "Scanner couldn't load — check your connection.";
-      fallbackBtn.style.display = 'inline-block';
+      revertScanUI(key);
       return;
     }
 
-    html5QrCode = new Html5Qrcode('qrReaderRegion');
-    const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+    html5QrCode = new Html5Qrcode(readerId);
+    const config = { fps: 10, qrbox: { width: 180, height: 180 } };
 
     html5QrCode.start(
       { facingMode: 'environment' },
       config,
       (decodedText) => {
-        const key = extractScreenKey(decodedText);
-        if(key){
+        const foundKey = extractScreenKey(decodedText);
+        if(foundKey){
           status.textContent = 'Got it!';
-          stopScanner();
-          closeScanner();
-          go(key);
+          cancelScanner();
+          go(foundKey);
         } else {
           status.textContent = "That's not one of this hunt's marks — try another.";
         }
       },
       () => { /* per-frame "no QR found" noise — ignore */ }
-    ).catch((err) => {
+    ).catch(() => {
       status.textContent = "Couldn't access the camera — check permissions.";
-      fallbackBtn.style.display = 'inline-block';
+      revertScanUI(key);
     });
-  }
-
-  function stopScanner(){
-    if(html5QrCode){
-      html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
-      html5QrCode = null;
-    }
-  }
-
-  function closeScanner(){
-    stopScanner();
-    document.getElementById('scanOverlay').classList.remove('show');
-  }
-
-  function scannerFallback(){
-    const key = scannerFallbackKey;
-    closeScanner();
-    if(key) go(key);
   }
 
   function showToast(msg){
