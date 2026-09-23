@@ -951,7 +951,7 @@
 </div>
 
 <div class="intertitle" id="intertitle" aria-live="polite">
-  <span class="it-kicker" id="itKicker">Clue #1</span>
+  <span class="it-kicker" id="itKicker">Evidence #1</span>
   <h2 class="it-title" id="itTitle">The Balcony</h2>
 </div>
 
@@ -1469,7 +1469,7 @@
     const token = ++sceneToken;
     const room = ROOMS[key];
     const it = document.getElementById('intertitle');
-    document.getElementById('itKicker').textContent = 'Clue #' + room.num;
+    document.getElementById('itKicker').textContent = 'Evidence #' + room.num;
     document.getElementById('itTitle').textContent = room.name;
 
     setMode('noir', false);
