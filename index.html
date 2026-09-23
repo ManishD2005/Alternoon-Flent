@@ -532,6 +532,60 @@
   body[data-mode="color"] .scratch{ animation:none; opacity:0; }
   body[data-mode="color"] .vignette{ opacity:0; }
 
+  /* ---- vintage grunge: stains + burnt edges behind the content, dust jumping on top ---- */
+  .grunge{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background-size:cover;
+    background-position:center;
+    opacity:.9;
+    transition:opacity 1.2s ease;
+  }
+  .phone:not(.noir) .grunge{ opacity:0; }
+  .dust{
+    position:absolute;
+    inset:0;
+    background-repeat:repeat;
+    animation:dust .56s steps(1) infinite;
+    transition:opacity 1s ease;
+  }
+  @keyframes dust{
+    0%{ background-position:0 0; }
+    25%{ background-position:37px calc(var(--dh) * -1); }
+    50%{ background-position:-61px calc(var(--dh) * -2); }
+    75%{ background-position:18px calc(var(--dh) * -3); }
+  }
+  body[data-mode="color"] .dust{ opacity:0; animation:none; }
+
+  /* ---- music toggle, only in the black & white world ---- */
+  .sound-toggle{
+    position:fixed;
+    right:max(14px, env(safe-area-inset-right, 0px));
+    bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
+    z-index:46;
+    width:44px; height:44px;
+    border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.55);
+    background:rgba(20,20,20,0.55);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    padding:0;
+    transition:opacity .6s ease, visibility .6s, transform .1s;
+  }
+  .sound-toggle:active{ transform:scale(0.92); }
+  .sound-toggle:focus-visible{ outline:3px solid #fff; outline-offset:3px; }
+  .sound-toggle svg{ width:22px; height:22px; }
+  .sound-toggle .off{ display:none; }
+  .sound-toggle[aria-pressed="false"] .on{ display:none; }
+  .sound-toggle[aria-pressed="false"] .off{ display:block; }
+  .sound-toggle .bars{ transform-origin:center; }
+  .sound-toggle.playing .bars{ animation:soundPulse 1.6s ease-in-out infinite; }
+  @keyframes soundPulse{ 50%{ opacity:.45; } }
+  body[data-mode="color"] .sound-toggle{ opacity:0; visibility:hidden; }
+
   .flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:45; }
   .flash.go{ animation:flash .5s ease-out; }
   @keyframes flash{ 0%{ opacity:.85; } 30%{ opacity:.2; } 45%{ opacity:.5; } 100%{ opacity:0; } }
@@ -586,6 +640,7 @@
   @media (prefers-reduced-motion: reduce){
     .screen.active > *, .screen.active .frame, .screen.active .frame-photo, .screen.active .avatar-blob{ animation:none; }
     .grain{ animation:none; }
+    .dust{ animation:none; }
     .flicker, .scratch{ display:none; }
     .flash.go{ animation:none; }
     .intertitle.show .it-kicker, .intertitle.show .it-title{ animation:none; }
@@ -644,6 +699,7 @@
 </svg>
 
 <div class="phone noir" id="phoneRoot" data-scene="noir">
+  <div class="grunge" id="grunge" aria-hidden="true"></div>
 
   <!-- 0: INTRO -->
   <div class="screen noir-screen active" data-screen="0" data-bg="noir" data-mode="noir">
@@ -927,12 +983,18 @@
 
 <div class="film" aria-hidden="true">
   <div class="grain" id="grain"></div>
+  <div class="dust" id="dust"></div>
   <div class="scratch"></div>
   <div class="scratch b"></div>
   <div class="flicker"></div>
   <div class="vignette"></div>
 </div>
 <div class="flash" id="flash" aria-hidden="true"></div>
+
+<button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Detective music on. Tap to mute.">
+  <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><g class="bars"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18.2 6.5a7.5 7.5 0 0 1 0 11"/></g></svg>
+  <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
 
 <div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
   <div><img id="zoomImg" alt=""><div class="zoom-hint">Tap anywhere to close</div></div>
@@ -964,6 +1026,103 @@
   document.querySelectorAll('img.cat-happy').forEach(i => i.src = CAT_HAPPY);
   document.querySelectorAll('img.purva').forEach(i => i.src = PURVA);
 
+  /* ---------- vintage grunge: drawn once at load, no image files needed ---------- */
+  (function makeGrunge(){
+    const W = 720, H = 1280;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const rnd = (a, b) => a + Math.random() * (b - a);
+
+    // mottled stains, dark and light
+    for(let i = 0; i < 70; i++){
+      const x = rnd(0, W), y = rnd(0, H), r = rnd(40, 280);
+      const dark = Math.random() < 0.7;
+      const a = dark ? rnd(0.04, 0.13) : rnd(0.015, 0.045);
+      const grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, dark ? 'rgba(0,0,0,' + a + ')' : 'rgba(255,255,255,' + a + ')');
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grd;
+      g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // uneven, burnt edges
+    for(let i = 0; i < 160; i++){
+      const side = i % 4, r = rnd(30, 110);
+      const x = side === 0 ? rnd(-20, 30) : side === 1 ? rnd(W - 30, W + 20) : rnd(0, W);
+      const y = side === 2 ? rnd(-20, 30) : side === 3 ? rnd(H - 30, H + 20) : rnd(0, H);
+      const grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, 'rgba(0,0,0,' + rnd(0.08, 0.2) + ')');
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grd;
+      g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // long scuffs and scratches, mostly vertical like worn film
+    g.lineCap = 'round';
+    for(let i = 0; i < 34; i++){
+      const x = rnd(0, W), y = rnd(0, H), len = rnd(60, 520);
+      g.strokeStyle = 'rgba(255,255,255,' + rnd(0.04, 0.13) + ')';
+      g.lineWidth = rnd(0.5, 1.3);
+      g.beginPath();
+      g.moveTo(x, y);
+      g.quadraticCurveTo(x + rnd(-30, 30), y + len / 2, x + rnd(-40, 40), y + len);
+      g.stroke();
+    }
+    for(let i = 0; i < 40; i++){
+      const x = rnd(0, W), y = rnd(0, H), a = rnd(0, Math.PI * 2), len = rnd(8, 40);
+      g.strokeStyle = 'rgba(255,255,255,' + rnd(0.05, 0.14) + ')';
+      g.lineWidth = rnd(0.4, 1);
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke();
+    }
+    // a couple of faint creases
+    for(let i = 0; i < 2; i++){
+      g.strokeStyle = 'rgba(255,255,255,0.05)';
+      g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(rnd(0, W), 0); g.lineTo(rnd(0, W), H); g.stroke();
+    }
+    // specks
+    for(let i = 0; i < 500; i++){
+      const dark = Math.random() < 0.75;
+      g.fillStyle = dark ? 'rgba(0,0,0,' + rnd(0.25, 0.6) + ')' : 'rgba(255,255,255,' + rnd(0.1, 0.35) + ')';
+      g.beginPath(); g.arc(rnd(0, W), rnd(0, H), rnd(0.4, 1.8), 0, Math.PI * 2); g.fill();
+    }
+    document.getElementById('grunge').style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+  })();
+
+  /* ---------- film dust: four frames stacked in one sprite, stepped through by CSS ---------- */
+  (function makeDust(){
+    const W = 460, FH = 700, FRAMES = 4;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = FH * FRAMES;
+    const g = c.getContext('2d');
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    g.lineCap = 'round';
+    for(let f = 0; f < FRAMES; f++){
+      const oy = f * FH;
+      const n = Math.floor(rnd(10, 20));
+      for(let i = 0; i < n; i++){
+        const light = Math.random() < 0.45;
+        g.fillStyle = light ? 'rgba(255,255,255,' + rnd(0.35, 0.7) + ')' : 'rgba(0,0,0,' + rnd(0.45, 0.8) + ')';
+        g.beginPath();
+        g.ellipse(rnd(0, W), oy + rnd(0, FH), rnd(0.6, 2.4), rnd(0.6, 2), rnd(0, 3), 0, Math.PI * 2);
+        g.fill();
+      }
+      // a stray hair every other frame
+      if(f % 2 === 0){
+        const x = rnd(20, W - 20), y = oy + rnd(20, FH - 60), len = rnd(18, 55);
+        g.strokeStyle = Math.random() < 0.5 ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.5)';
+        g.lineWidth = 0.9;
+        g.beginPath();
+        g.moveTo(x, y);
+        g.bezierCurveTo(x + rnd(-20, 20), y + len * 0.3, x + rnd(-25, 25), y + len * 0.7, x + rnd(-10, 10), y + len);
+        g.stroke();
+      }
+    }
+    const d = document.getElementById('dust');
+    d.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+    d.style.backgroundSize = W + 'px ' + (FH * FRAMES) + 'px';
+    d.style.setProperty('--dh', FH + 'px');
+  })();
+
   /* ---------- live film grain: one noise tile, jittered every frame by CSS ---------- */
   (function makeGrain(){
     const c = document.createElement('canvas');
@@ -980,7 +1139,226 @@
   })();
 
   /* ---------- noir / colour ---------- */
+  /* ---------- detective music: a noir jazz loop composed right here in Web Audio ----------
+     D minor, 74 bpm, swung: walking bass, brushes + ride, soft piano comping,
+     a vibraphone melody, all through an "old radio" filter with record crackle. */
+  const Music = (() => {
+    const BPM = 74, BEAT = 60 / BPM, BAR = BEAT * 4;
+    const SWING = 2 / 3;
+    const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+    const pos = b => { const whole = Math.floor(b); return b - whole === 0.5 ? whole + SWING : b; };
+
+    const PROG = [
+      { bass:[38, 41, 45, 47], chord:[53, 57, 60, 64] },   // Dm9
+      { bass:[34, 38, 41, 42], chord:[50, 53, 57, 60] },   // Bbmaj9
+      { bass:[31, 34, 38, 32], chord:[53, 57, 58, 62] },   // Gm9
+      { bass:[33, 37, 40, 39], chord:[55, 58, 61, 64] }    // A7b9
+    ];
+    // [bar, beat, midi, beats]
+    const MELODY = [
+      [0,1,69,1.5],[0,2.5,65,.5],[0,3,64,1],
+      [1,0,62,3],
+      [2,.5,70,.5],[2,1,69,1],[2,2,67,1],[2,3,65,1],
+      [3,0,64,2],[3,2.5,61,1.5],
+      [4,0,74,1.5],[4,1.5,72,.5],[4,2,69,2],
+      [5,1,70,.5],[5,1.5,69,.5],[5,2,65,2],
+      [6,0,67,1],[6,1,70,1],[6,2,74,1.5],[6,3.5,73,.5],
+      [7,0,73,1],[7,1,70,1],[7,2,69,2]
+    ];
+
+    let ctx = null, master, bus, noiseBuf, crackleSrc;
+    let timer = null, nextBar = 0, barIdx = 0, stopTimer = null;
+    let wanted = false, muted = false;
+
+    function build(){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 90;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3400;
+      const shaper = ctx.createWaveShaper();
+      const curve = new Float32Array(1024);
+      for(let i = 0; i < 1024; i++){ const x = i / 512 - 1; curve[i] = Math.tanh(x * 1.6) / Math.tanh(1.6); }
+      shaper.curve = curve;
+      bus = ctx.createGain(); bus.gain.value = 0.8;
+      bus.connect(hp); hp.connect(lp); lp.connect(shaper); shaper.connect(master);
+      master.connect(ctx.destination);
+
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const nd = noiseBuf.getChannelData(0);
+      for(let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+      // record crackle: faint hiss plus random pops, looped
+      const cb = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
+      const cd = cb.getChannelData(0);
+      for(let i = 0; i < cd.length; i++){
+        cd[i] = (Math.random() * 2 - 1) * 0.012;
+        if(Math.random() < 0.0009){
+          const amp = (Math.random() * 0.7 + 0.2) * (Math.random() < 0.5 ? -1 : 1);
+          const len = 20 + Math.floor(Math.random() * 60);
+          for(let k = 0; k < len && i + k < cd.length; k++) cd[i + k] += amp * Math.exp(-k / 8);
+        }
+      }
+      crackleSrc = ctx.createBufferSource();
+      crackleSrc.buffer = cb; crackleSrc.loop = true;
+      const chp = ctx.createBiquadFilter(); chp.type = 'highpass'; chp.frequency.value = 500;
+      const cg = ctx.createGain(); cg.gain.value = 0.28;
+      crackleSrc.connect(chp); chp.connect(cg); cg.connect(master);
+      crackleSrc.start();
+      return true;
+    }
+
+    function env(g, t, peak, attack, decay){
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    }
+
+    function bass(m, t){
+      const f = mtof(m);
+      const o1 = ctx.createOscillator(); o1.type = 'triangle'; o1.frequency.value = f;
+      const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(1100, t); lp.frequency.exponentialRampToValueAtTime(420, t + 0.25);
+      const g = ctx.createGain(); env(g, t, 0.42, 0.012, BEAT * 1.05);
+      o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(bus);
+      [o1, o2].forEach(o => { o.start(t); o.stop(t + BEAT * 1.2); });
+    }
+
+    function piano(notes, t, vel){
+      notes.forEach((m, i) => {
+        const o = ctx.createOscillator(); o.type = 'triangle';
+        o.frequency.value = mtof(m); o.detune.value = (Math.random() - 0.5) * 8;
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600;
+        const g = ctx.createGain();
+        const st = t + i * 0.012;                         // slight roll, like a real hand
+        env(g, st, 0.05 * vel, 0.006, 1.5);
+        o.connect(lp); lp.connect(g); g.connect(bus);
+        o.start(st); o.stop(st + 1.6);
+      });
+    }
+
+    function vibes(m, t, dur){
+      const f = mtof(m);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 4;
+      const g2 = ctx.createGain(); g2.gain.value = 0.06;
+      const g = ctx.createGain(); env(g, t, 0.16, 0.005, Math.max(1.2, dur + 0.8));
+      const trem = ctx.createGain(); trem.gain.value = 0.75;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 5.2;
+      const lfoAmt = ctx.createGain(); lfoAmt.gain.value = 0.25;
+      lfo.connect(lfoAmt); lfoAmt.connect(trem.gain);
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(trem); trem.connect(bus);
+      const end = t + dur + 1.2;
+      [o, o2, lfo].forEach(x => { x.start(t); x.stop(end); });
+    }
+
+    function noiseHit(t, type, amt){
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+      const f = ctx.createBiquadFilter();
+      const g = ctx.createGain();
+      if(type === 'ride'){
+        f.type = 'highpass'; f.frequency.value = 6500;
+        env(g, t, 0.045 * amt, 0.002, 0.32);
+      } else {                                            // brush swish
+        f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.6;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.05 * amt, t + 0.07);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26);
+      }
+      s.connect(f); f.connect(g); g.connect(bus);
+      s.start(t, Math.random() * 1.5); s.stop(t + 0.5);
+    }
+
+    function kick(t){
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.12);
+      const g = ctx.createGain(); env(g, t, 0.18, 0.004, 0.22);
+      o.connect(g); g.connect(bus); o.start(t); o.stop(t + 0.3);
+    }
+
+    function scheduleBar(i, t){
+      const p = PROG[i % 4];
+      const beat = b => t + pos(b) * BEAT;
+      p.bass.forEach((m, k) => bass(m, beat(k)));
+      [0, 1, 1.5, 2, 3, 3.5].forEach(b => noiseHit(beat(b), 'ride', (b === 1 || b === 3) ? 1 : 0.65));
+      noiseHit(beat(1), 'brush', 1); noiseHit(beat(3), 'brush', 1);
+      kick(beat(0));
+      // Charleston comping, sometimes laying out
+      piano(p.chord, beat(0), 1);
+      if(i % 2 === 0) piano(p.chord, beat(1.5), 0.7);
+      else if(Math.random() < 0.5) piano(p.chord, beat(2.5), 0.6);
+      MELODY.filter(n => n[0] === i % 8).forEach(n => vibes(n[2], beat(n[1]), n[3] * BEAT));
+    }
+
+    function tick(){
+      while(nextBar < ctx.currentTime + 0.4){
+        scheduleBar(barIdx, nextBar);
+        nextBar += BAR; barIdx++;
+      }
+    }
+
+    function start(){
+      clearTimeout(stopTimer);
+      if(ctx.state !== 'running') ctx.resume();
+      if(!timer){
+        barIdx = 0;
+        nextBar = ctx.currentTime + 0.12;
+        timer = setInterval(tick, 60);
+        tick();
+      }
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 1.4);
+      toggle.classList.add('playing');
+    }
+
+    function stop(fade){
+      toggle.classList.remove('playing');
+      if(!ctx) return;
+      const f = fade == null ? 1.4 : fade;
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + f);
+      clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => {
+        clearInterval(timer); timer = null;
+        ctx.suspend();
+      }, f * 1000 + 3500);                                // let scheduled notes finish silently
+    }
+
+    function sync(){
+      const should = wanted && !muted && !document.hidden;
+      if(!ctx) return;
+      should ? start() : stop();
+    }
+
+    // browsers only allow sound after a tap, so the first tap anywhere unlocks it
+    function unlock(){
+      if(ctx || muted) return;
+      if(!build()) return;
+      sync();
+    }
+    ['pointerdown', 'keydown', 'touchend'].forEach(ev => window.addEventListener(ev, unlock, { passive:true }));
+    document.addEventListener('visibilitychange', sync);
+
+    const toggle = document.getElementById('soundToggle');
+    toggle.addEventListener('click', () => {
+      muted = !muted;
+      toggle.setAttribute('aria-pressed', muted ? 'false' : 'true');
+      toggle.setAttribute('aria-label', muted ? 'Detective music off. Tap to play.' : 'Detective music on. Tap to mute.');
+      if(!muted && !ctx){ unlock(); return; }
+      sync();
+    });
+
+    return {
+      setNoir(on){ wanted = on; sync(); }
+    };
+  })();
+
   function setMode(mode, animate, dur){
+    Music.setNoir(mode === 'noir');
     root.style.setProperty('--mode-dur', RM ? '.5s' : (dur || '1.8s'));
     root.classList.toggle('animating', !!animate);
     root.classList.toggle('noir', mode === 'noir');
