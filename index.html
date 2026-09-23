@@ -200,7 +200,36 @@
     bottom:8%;
     width:auto;
   }
-  #closedBtn{ bottom:16%; }
+  .screen[data-screen="closed"]{
+    align-items:center;
+    gap:clamp(14px, 3.4vh, 34px);
+    gap:clamp(14px, 3.4dvh, 34px);
+    padding-left:max(24px, calc(var(--u) * 48));
+    padding-right:max(24px, calc(var(--u) * 48));
+    padding-bottom:calc(3vh + 58px);
+    padding-bottom:calc(3dvh + 58px);
+  }
+  .screen[data-screen="closed"] > .spacer{ align-self:stretch; }
+  .closed-cat{ width:min(calc(var(--u) * 210), 28vh); width:min(calc(var(--u) * 210), 28dvh); aspect-ratio:1/1; }
+  .screen.active .closed-cat{ animation:popIn .7s cubic-bezier(.34,1.56,.64,1) .1s both; }
+  .closed-cat img{ width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 12px 20px rgba(0,0,0,0.3)); animation:catBob 2.6s ease-in-out .9s infinite; }
+  @keyframes catBob{ 0%,100%{ transform:rotate(-4deg) translateY(0); } 50%{ transform:rotate(3deg) translateY(-8px); } }
+  .closed-copy{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .closed-copy p{ max-width:17em; color:#fff; }
+  .closed-copy .goodies{
+    font-family:"Zin Display Condensed", "Lora", serif;
+    font-weight:700;
+    font-size:max(26px, calc(var(--u) * 32));
+    line-height:1.15;
+    color:#ffd24a;
+  }
+  #closedBtn{ width:100%; margin:0 0 0 6px; }
+  @media (max-height:720px){
+    .screen[data-screen="closed"]{ gap:12px; padding-top:18px; }
+    .closed-cat{ width:min(calc(var(--u) * 190), 23vh); width:min(calc(var(--u) * 190), 23dvh); }
+    .closed-copy .goodies{ font-size:26px; }
+  }
+  .confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:35; }
   .screen[data-screen="0"]{
     align-items:center;
     gap:clamp(14px, 3.6vh, 40px);
@@ -638,6 +667,7 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   @media (prefers-reduced-motion: reduce){
+    .closed-cat img{ animation:none; }
     .screen.active > *, .screen.active .frame, .screen.active .frame-photo, .screen.active .avatar-blob{ animation:none; }
     .grain{ animation:none; }
     .dust{ animation:none; }
@@ -650,53 +680,6 @@
 </head>
 <body data-mode="noir">
 
-<!-- ornate frame, drawn once and reused -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6e5220"/>
-      <stop offset=".3" stop-color="#e9cd82"/>
-      <stop offset=".55" stop-color="#9c7a34"/>
-      <stop offset=".8" stop-color="#f3dc98"/>
-      <stop offset="1" stop-color="#6a4d1c"/>
-    </linearGradient>
-    <linearGradient id="gGoldDeep" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#4f3913"/>
-      <stop offset=".45" stop-color="#b8923f"/>
-      <stop offset=".6" stop-color="#e2c273"/>
-      <stop offset="1" stop-color="#5a4217"/>
-    </linearGradient>
-    <g id="frameCorner">
-      <path d="M30 7 C 44 1, 56 9, 50 17 C 46 22, 38 19, 42 13" fill="none" stroke="url(#gGold)" stroke-width="3" stroke-linecap="round"/>
-      <path d="M7 30 C 1 44, 9 56, 17 50 C 22 46, 19 38, 13 42" fill="none" stroke="url(#gGold)" stroke-width="3" stroke-linecap="round"/>
-      <path d="M22 22 L 36 30 Q 30 30 30 36 Z" fill="url(#gGoldDeep)" stroke="#4a3610" stroke-width=".8"/>
-      <circle cx="17" cy="17" r="13" fill="url(#gGold)" stroke="#4a3610" stroke-width="1.2"/>
-      <circle cx="17" cy="17" r="8" fill="none" stroke="#4a3610" stroke-width="1" stroke-dasharray="1.5 2"/>
-      <circle cx="17" cy="17" r="4" fill="#f7e5ab" stroke="#6b4e1a" stroke-width="1"/>
-    </g>
-    <g id="frameEdge">
-      <path d="M86 17 Q 100 3, 114 17 Q 100 31, 86 17 Z" fill="url(#gGold)" stroke="#4a3610" stroke-width="1"/>
-      <circle cx="100" cy="17" r="3.2" fill="#f7e5ab" stroke="#6b4e1a" stroke-width=".8"/>
-      <path d="M70 17 C 76 10, 82 12, 84 17 M130 17 C 124 10, 118 12, 116 17" fill="none" stroke="url(#gGold)" stroke-width="2.2" stroke-linecap="round"/>
-    </g>
-    <symbol id="ornateFrame" viewBox="0 0 200 200">
-      <rect x="3" y="3" width="194" height="194" rx="3" fill="none" stroke="url(#gGoldDeep)" stroke-width="6"/>
-      <rect x="9.5" y="9.5" width="181" height="181" fill="none" stroke="#f3dc98" stroke-width="3.6" stroke-dasharray="0 6.6" stroke-linecap="round"/>
-      <rect x="18" y="18" width="164" height="164" fill="none" stroke="url(#gGold)" stroke-width="12"/>
-      <rect x="18" y="18" width="164" height="164" fill="none" stroke="#4a3610" stroke-width="12" stroke-dasharray="1 5" opacity=".35"/>
-      <rect x="26.5" y="26.5" width="147" height="147" fill="none" stroke="url(#gGoldDeep)" stroke-width="4"/>
-      <rect x="30.5" y="30.5" width="139" height="139" fill="none" stroke="#3b2a0c" stroke-width="2.5"/>
-      <use href="#frameCorner"/>
-      <use href="#frameCorner" transform="rotate(90 100 100)"/>
-      <use href="#frameCorner" transform="rotate(180 100 100)"/>
-      <use href="#frameCorner" transform="rotate(270 100 100)"/>
-      <use href="#frameEdge"/>
-      <use href="#frameEdge" transform="rotate(90 100 100)"/>
-      <use href="#frameEdge" transform="rotate(180 100 100)"/>
-      <use href="#frameEdge" transform="rotate(270 100 100)"/>
-    </symbol>
-  </defs>
-</svg>
 
 <div class="phone noir" id="phoneRoot" data-scene="noir">
   <div class="grunge" id="grunge" aria-hidden="true"></div>
@@ -934,14 +917,14 @@
 
   <!-- CASE CLOSED -->
   <div class="screen" data-screen="closed" data-bg="teal" data-mode="color">
-    <div class="spacer" style="flex:0.8 0 10px"></div>
+    <div class="spacer" style="flex:0.9 0 10px"></div>
     <h2 class="center">Case Closed,<br>Detective!</h2>
-    <div class="frame">
-      <div class="mat"><img class="cat-happy" alt="Sherlock the detective cat celebrating"></div>
-      <svg aria-hidden="true"><use href="#ornateFrame"/></svg>
+    <div class="closed-cat"><img class="cat-happy" alt="Sherlock the detective cat celebrating"></div>
+    <div class="closed-copy">
+      <p class="center">You've found what makes this place a home :)</p>
+      <p class="center goodies">Now go get your goodies!</p>
     </div>
-    <p class="center">You've found what makes this place a home :)</p>
-    <button class="btn btn-primary" id="closedBtn" onclick="pressThenGo(this,'enquiry')">See what's next!</button>
+    <button class="btn" id="closedBtn" onclick="pressThenGo(this,'enquiry')">See what's next!</button>
     <div class="spacer" style="flex:1.2"></div>
     <div class="flent-logo"><svg width="75" height="28" viewBox="0 0 75 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12.1136 0C5.27516 0 1.01004 5.44503 2.56642 10.7592L0 10.7684L0 14.1865H2.57101L2.57101 26.8808H8.44071V14.1865H12.9928L12.9928 10.7363H10.9107C8.02522 10.7363 6.35865 9.12937 6.35865 6.88433C6.35865 5.00887 8.25707 3.56039 10.408 3.56039C15.2126 3.56039 16.6289 7.70384 16.6289 7.70384L16.6289 26.8808H22.4986L22.4986 4.8941C21.1649 3.15867 17.492 0 12.1136 0Z" fill="currentColor"/>
@@ -990,8 +973,9 @@
   <div class="vignette"></div>
 </div>
 <div class="flash" id="flash" aria-hidden="true"></div>
+<canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
 
-<button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Detective music on. Tap to mute.">
+<button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Sound on. Tap to mute.">
   <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><g class="bars"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18.2 6.5a7.5 7.5 0 0 1 0 11"/></g></svg>
   <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
 </button>
@@ -1168,7 +1152,7 @@
 
     let ctx = null, master, bus, noiseBuf, crackleSrc;
     let timer = null, nextBar = 0, barIdx = 0, stopTimer = null;
-    let wanted = false, muted = false;
+    let wanted = false, muted = false, sfxBus = null;
 
     function build(){
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -1324,14 +1308,83 @@
       clearTimeout(stopTimer);
       stopTimer = setTimeout(() => {
         clearInterval(timer); timer = null;
-        ctx.suspend();
+        if(muted || document.hidden) ctx.suspend();       // stay awake for sound effects otherwise
       }, f * 1000 + 3500);                                // let scheduled notes finish silently
     }
 
     function sync(){
-      const should = wanted && !muted && !document.hidden;
       if(!ctx) return;
+      if(!muted && !document.hidden && ctx.state !== 'running') ctx.resume();
+      const should = wanted && !muted && !document.hidden;
       should ? start() : stop();
+    }
+
+    /* ---- sound effects: short, quiet, and they bypass the old-radio filter ---- */
+    function ready(){
+      if(muted) return false;
+      if(!ctx){ if(!build()) return false; sync(); }
+      if(ctx.state !== 'running') ctx.resume();
+      return true;
+    }
+    function out(){
+      if(!sfxBus){ sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(ctx.destination); }
+      return sfxBus;
+    }
+    function click(){
+      if(!ready()) return;
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(720, t); o.frequency.exponentialRampToValueAtTime(300, t + 0.07);
+      const g = ctx.createGain(); env(g, t, 0.16, 0.003, 0.08);
+      o.connect(g); g.connect(out()); o.start(t); o.stop(t + 0.12);
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3500;
+      const ng = ctx.createGain(); env(ng, t, 0.05, 0.001, 0.02);
+      s.connect(hp); hp.connect(ng); ng.connect(out()); s.start(t, Math.random()); s.stop(t + 0.05);
+    }
+    function blip(){
+      if(muted || !ctx || ctx.state !== 'running') return;
+      const t = ctx.currentTime;
+      const f = 560 + Math.random() * 240;
+      const o = ctx.createOscillator(); o.type = 'triangle';
+      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.82, t + 0.05);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2000;
+      const g = ctx.createGain(); env(g, t, 0.06, 0.004, 0.045);
+      o.connect(lp); lp.connect(g); g.connect(out()); o.start(t); o.stop(t + 0.08);
+    }
+    function swish(){
+      if(!ready()) return;
+      const t = ctx.currentTime;
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1;
+      bp.frequency.setValueAtTime(650, t); bp.frequency.exponentialRampToValueAtTime(2800, t + 0.22);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.17, t + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      s.connect(bp); bp.connect(g); g.connect(out()); s.start(t, Math.random()); s.stop(t + 0.3);
+    }
+    function victory(){
+      if(!ready()) return;
+      const t = ctx.currentTime + 0.05;
+      const bell = (m, st, peak, dec) => {
+        const f = mtof(m);
+        const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+        const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
+        const g2 = ctx.createGain(); g2.gain.value = 0.3;
+        const g = ctx.createGain(); env(g, st, peak, 0.006, dec);
+        o.connect(g); o2.connect(g2); g2.connect(g); g.connect(out());
+        [o, o2].forEach(x => { x.start(st); x.stop(st + dec + 0.1); });
+      };
+      [74, 78, 81, 86].forEach((m, i) => bell(m, t + i * 0.09, 0.11, 0.9));        // D major run up
+      [74, 78, 81, 86].forEach(m => bell(m, t + 0.46, 0.07, 1.9));                   // ring the chord
+      bell(50, t + 0.46, 0.12, 1.6);                                                  // warm low D
+      for(let i = 0; i < 9; i++){                                                      // sparkles
+        const st = t + 0.4 + Math.random() * 1.1;
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1900 + Math.random() * 1500;
+        const g = ctx.createGain(); env(g, st, 0.025, 0.002, 0.28);
+        o.connect(g); g.connect(out()); o.start(st); o.stop(st + 0.32);
+      }
     }
 
     // browsers only allow sound after a tap, so the first tap anywhere unlocks it
@@ -1347,15 +1400,21 @@
     toggle.addEventListener('click', () => {
       muted = !muted;
       toggle.setAttribute('aria-pressed', muted ? 'false' : 'true');
-      toggle.setAttribute('aria-label', muted ? 'Detective music off. Tap to play.' : 'Detective music on. Tap to mute.');
+      toggle.setAttribute('aria-label', muted ? 'Sound off. Tap to turn it on.' : 'Sound on. Tap to mute.');
       if(!muted && !ctx){ unlock(); return; }
       sync();
     });
 
     return {
-      setNoir(on){ wanted = on; sync(); }
+      setNoir(on){ wanted = on; sync(); },
+      click, blip, swish, victory
     };
   })();
+
+  // every button gets a soft tap
+  document.addEventListener('pointerdown', e => {
+    if(e.target.closest('.btn, .link-under, .deck-dots button')) Music.click();
+  });
 
   function setMode(mode, animate, dur){
     Music.setNoir(mode === 'noir');
@@ -1397,6 +1456,7 @@
     if(!opts.keepMode) setMode(target.dataset.mode, false);
     target.querySelectorAll('*').forEach(el => { if(el.style.animation) el.style.animation = ''; });
     if(ROOMS[screenKey]) resetRoom(target);
+    if(screenKey === 'closed') setTimeout(() => { Music.victory(); celebrate(); }, 350);
     try{ history.replaceState(null, '', '#'+screenKey); }catch(e){}
     requestAnimationFrame(fitQrBoxes);
     setTimeout(fitQrBoxes, 150);
@@ -1474,6 +1534,7 @@
 
     function setActive(i){
       if(i === state.idx) return;
+      if(state.idx !== -1) Music.swish();                 // a real swipe, not the reset on entry
       state.idx = i;
       state.seen.add(i);
       cards.forEach((c, k) => c.classList.toggle('active', k === i));
@@ -1583,10 +1644,65 @@
     b._timer = setInterval(() => {
       i += 1;
       live.innerHTML = escapeHtml(text.slice(0, i)) + (i < text.length ? caret : '');
+      if(i % 2 === 0 && /[a-z0-9]/i.test(text[i - 1])) Music.blip();   // Sherlock's little voice
       if(i >= text.length) clearInterval(b._timer);
     }, 24);
   }
   function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  /* ---------- subtle confetti for the solved case ---------- */
+  function celebrate(){
+    if(RM) return;
+    const cv = document.getElementById('confetti');
+    const g = cv.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const colors = ['#ffffff', '#ffd24a', '#ff9f5a', '#9be7c4', '#ffe3b8'];
+    const bits = [];
+    const add = (n, delay) => {
+      for(let i = 0; i < n; i++){
+        bits.push({
+          x: Math.random() * W, y: -20 - Math.random() * H * 0.35,
+          vx: (Math.random() - 0.5) * 0.6, vy: 1 + Math.random() * 1.6,
+          w: 5 + Math.random() * 5, h: 8 + Math.random() * 7,
+          rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.18,
+          flip: Math.random() * Math.PI * 2, vf: 0.06 + Math.random() * 0.1,
+          sway: Math.random() * Math.PI * 2,
+          color: colors[(Math.random() * colors.length) | 0],
+          born: performance.now() + delay, life: 4200 + Math.random() * 1800
+        });
+      }
+    };
+    add(55, 0);
+    add(30, 700);
+    const t0 = performance.now();
+    function frame(now){
+      g.clearRect(0, 0, W, H);
+      let alive = 0;
+      for(const p of bits){
+        if(now < p.born) { alive++; continue; }
+        const age = now - p.born;
+        if(age > p.life || p.y > H + 30) continue;
+        alive++;
+        p.sway += 0.03;
+        p.x += p.vx + Math.sin(p.sway) * 0.6;
+        p.y += p.vy;
+        p.rot += p.vr; p.flip += p.vf;
+        const fade = Math.min(1, (p.life - age) / 900);
+        g.save();
+        g.globalAlpha = 0.9 * fade;
+        g.translate(p.x, p.y); g.rotate(p.rot); g.scale(1, Math.cos(p.flip));
+        g.fillStyle = p.color;
+        g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        g.restore();
+      }
+      if(alive && now - t0 < 9000) requestAnimationFrame(frame);
+      else g.clearRect(0, 0, W, H);
+    }
+    requestAnimationFrame(frame);
+  }
 
   /* ---------- QR box sizing ---------- */
   function fitQrBoxes(){
