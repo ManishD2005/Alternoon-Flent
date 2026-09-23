@@ -407,20 +407,22 @@
   .narration{
     grid-row:1; grid-column:1;
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     gap:12px;
     opacity:0;
     transform:translateY(14px) scale(0.96);
     transition:opacity .4s ease, transform .6s cubic-bezier(.34,1.56,.64,1), visibility .4s;
   }
   .room.narrating .narration{ opacity:1; transform:none; }
-  .narrator{ width:max(80px, calc(var(--u) * 96)); aspect-ratio:1/1; flex-shrink:0; }
+  .narrator{ width:max(80px, calc(var(--u) * 96)); aspect-ratio:1/1; flex-shrink:0; margin-top:-6px; }
+  /* Sherlock's bubble with the button he's handing over, tucked underneath */
+  .say{ flex:1; min-width:0; display:grid; grid-template-columns:100%; row-gap:12px; }
+  .say .bubble{ grid-area:1/1; min-height:max(72px, calc(var(--u) * 84)); align-content:center; }
   .narrator img{ width:100%; height:100%; object-fit:contain; transform:rotate(-6deg); filter:drop-shadow(0 6px 10px rgba(0,0,0,0.25)); }
   .room.narrating .narrator img{ animation:catNod .5s ease-out; }
   @keyframes catNod{ 0%{ transform:rotate(-6deg); } 40%{ transform:rotate(-12deg) translateY(-3px); } 100%{ transform:rotate(-6deg); } }
   .bubble{
     position:relative;
-    flex:1;
     background:#fff;
     border-radius:10px;
     padding:13px 15px;
@@ -430,7 +432,7 @@
   .bubble::before{
     content:"";
     position:absolute;
-    left:-8px; top:50%;
+    left:-8px; top:max(36px, calc(var(--u) * 42));
     width:16px; height:16px;
     background:#fff;
     transform:translateY(-50%) rotate(45deg);
@@ -448,14 +450,29 @@
   @keyframes blink{ 50%{ opacity:0; } }
 
   .btn.green{ background:#008E75; color:#fff; border:2px solid var(--ink); box-shadow:-6px 6px 0 var(--ink); font-weight:600; }
-  .to-witness, .room-next{ transition:opacity .4s ease, transform .5s cubic-bezier(.34,1.4,.64,1), visibility .4s; }
-  .to-witness{ grid-row:2; grid-column:1; opacity:0; visibility:hidden; transform:translateY(10px); }
-  .room.done .to-witness{ opacity:1; visibility:visible; transform:none; }
-  .room[data-phase="witness"] .to-witness{ display:none; }
-  .room-next{ grid-row:1; grid-column:1; align-self:center; opacity:0; visibility:hidden; transform:translateY(10px); }
-  .room.handoff .narration{ opacity:0; visibility:hidden; transform:translateY(-8px) scale(0.97); }
-  .room.handoff .room-next{ opacity:1; visibility:visible; transform:none; transition-delay:.25s; }
+  .say .btn.green{
+    grid-area:2/1;
+    font-size:max(15px, calc(var(--u) * 16));
+    padding:13px 16px;
+    box-shadow:-4px 4px 0 var(--ink);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-10px) scale(0.96);
+    transform-origin:top left;
+    transition:opacity .35s ease, transform .5s cubic-bezier(.34,1.56,.64,1), visibility .35s;
+  }
+  .say .btn.green:active, .say .btn.green.pressed{ transform:translate(-2px,2px) scale(0.97); box-shadow:-1px 1px 0 var(--ink), inset 2px 3px 6px rgba(0,0,0,0.3); }
+  .room.done[data-phase="photos"] .to-witness,
+  .room.ready-next[data-phase="witness"] .room-next{ opacity:1; visibility:visible; transform:none; }
 
+  @media (max-height:720px){
+    .screen.room{ gap:10px; padding-top:22px; padding-bottom:24px; }
+    .reel{ --cw: min(calc(var(--u) * 268), calc(40vh * 0.849)); --cw: min(calc(var(--u) * 268), calc(40dvh * 0.849)); padding-top:24px; }
+    .witnesses{ gap:18px; padding:4px 0; }
+    .w-card{ padding-top:16px; padding-bottom:14px; }
+    .w-quote{ font-size:15px; margin-bottom:10px; }
+    .designer-avatar{ width:40px; height:40px; }
+  }
   .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
   /* ================= enquiry ================= */
@@ -707,10 +724,12 @@
     <div class="bottom">
       <div class="narration">
         <div class="narrator"><img class="cat-happy" alt="Sherlock"></div>
-        <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+        <div class="say">
+          <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+          <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
+          <button class="btn green room-next" onclick="leaveRoom(this,'scan2')">See the next evidence</button>
+        </div>
       </div>
-      <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
-      <button class="btn green room-next" onclick="leaveRoom(this,'scan2')">See the next evidence</button>
     </div>
   </div>
 
@@ -776,10 +795,12 @@
     <div class="bottom">
       <div class="narration">
         <div class="narrator"><img class="cat-happy" alt="Sherlock"></div>
-        <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+        <div class="say">
+          <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+          <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
+          <button class="btn green room-next" onclick="leaveRoom(this,'scan3')">See the next evidence</button>
+        </div>
       </div>
-      <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
-      <button class="btn green room-next" onclick="leaveRoom(this,'scan3')">See the next evidence</button>
     </div>
   </div>
 
@@ -846,10 +867,12 @@
     <div class="bottom">
       <div class="narration">
         <div class="narrator"><img class="cat-happy" alt="Sherlock"></div>
-        <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+        <div class="say">
+          <div class="bubble"><p class="ghost" aria-hidden="true"></p><p class="live" aria-hidden="true"></p><span class="sr-only" aria-live="polite"></span></div>
+          <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
+          <button class="btn green room-next" onclick="pressThenGo(this,'closed')">Close the case</button>
+        </div>
       </div>
-      <button class="btn green to-witness" onclick="showWitnesses(this)">Hear from the witnesses</button>
-      <button class="btn green room-next" onclick="pressThenGo(this,'closed')">Close the case</button>
     </div>
   </div>
 
@@ -1152,13 +1175,13 @@
     const line = "I questioned the designer. Turns out she had a lot to say.";
     await wait(RM ? 0 : 450);
     narrate(screen, line);
-    await wait(RM ? 1200 : line.length * 24 + 2200);
+    await wait(RM ? 200 : line.length * 24 + 350);
     if(token !== sceneToken || screen.dataset.phase !== 'witness') return;
-    screen.classList.add('handoff');
+    screen.classList.add('ready-next');
   }
 
   function resetRoom(screen){
-    screen.classList.remove('narrating', 'done', 'handoff');
+    screen.classList.remove('narrating', 'done', 'ready-next');
     const b = screen.querySelector('.bubble');
     clearInterval(b._timer);
     b.querySelector('.ghost').textContent = '';
